@@ -31,7 +31,7 @@ class Graylog2Exceptions
 
   def send_to_graylog2 err
     begin
-      gelf = Graylog2::Gelf.new @gl2_hostname, @gl2_port
+      gelf = Gelf.new @gl2_hostname, @gl2_port
       gelf.short_message = err.message
       gelf.full_message = err.backtrace.join("\n")
       gelf.level = @level

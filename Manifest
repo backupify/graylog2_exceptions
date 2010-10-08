@@ -1,0 +1,4 @@
+Manifest
+Rakefile
+graylog2_exceptions.gemspec
+lib/graylog2_exceptions.rb

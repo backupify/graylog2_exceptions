@@ -3,10 +3,13 @@ require 'gelf'
 require 'socket'
 
 class Graylog2Exceptions
+  attr_reader :hostname, :port, :level, :local_app_name
+
   def initialize(app, options)
-    @gl2_hostname = options[:host] || "localhost"
-    @gl2_port = options[:port] || 12201
+    @hostname = options[:host] || "localhost"
+    @port = options[:port] || 12201
     @local_app_name = options[:local_app_name] || Socket::gethostname
+    @level = options[:level] || 3
 
     @app = app
   end
@@ -31,7 +34,7 @@ class Graylog2Exceptions
 
   def send_to_graylog2 err
     begin
-      gelf = Gelf.new @gl2_hostname, @gl2_port
+      gelf = Gelf.new(@hostname, @port)
       gelf.short_message = err.message
       gelf.full_message = err.backtrace.join("\n")
       gelf.level = @level

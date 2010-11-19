@@ -15,19 +15,19 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
   def test_correct_parameters_when_custom_set
     c = Graylog2Exceptions.new(nil, {:host => "localhost", :port => 1337, :local_app_name => "yomama", :level => 1})
     
-    assert_equal "yomama", c.local_app_name
-    assert_equal "localhost", c.hostname
-    assert_equal 1337, c.port
-    assert_equal 1, c.level
+    assert_equal "yomama", c.args[:local_app_name]
+    assert_equal "localhost", c.args[:hostname]
+    assert_equal 1337, c.args[:port]
+    assert_equal 1, c.args[:level]
   end
   
   def test_correct_parameters_when_not_custom_set
     c = Graylog2Exceptions.new(nil, {})
     
-    assert_equal Socket.gethostname, c.local_app_name
-    assert_equal "localhost", c.hostname
-    assert_equal 12201, c.port
-    assert_equal 3, c.level
+    assert_equal Socket.gethostname, c.args[:local_app_name]
+    assert_equal "localhost", c.args[:hostname]
+    assert_equal 12201, c.args[:port]
+    assert_equal 3, c.args[:level]
   end
 
   def test_send_exception_to_graylog2_without_custom_parameters

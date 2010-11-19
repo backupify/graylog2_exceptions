@@ -3,14 +3,17 @@ require 'gelf'
 require 'socket'
 
 class Graylog2Exceptions
-  attr_reader :hostname, :port, :level, :local_app_name
+  attr_reader :args
 
-  def initialize(app, options)
-    @hostname = options[:host] || "localhost"
-    @port = options[:port] || 12201
-    @local_app_name = options[:local_app_name] || Socket::gethostname
-    @level = options[:level] || 3
+  def initialize(app, args = {})
+    standard_args = {
+      :hostname => "localhost",
+      :port => 12201,
+      :local_app_name => Socket::gethostname,
+      :level => 3
+    }
 
+    @args = standard_args.merge(args)
     @app = app
   end
 
@@ -23,7 +26,7 @@ class Graylog2Exceptions
     begin
       # Call the app we are monitoring
       @app.call(env)
-    rescue StandardError, SyntaxError, LoadError => err
+    rescue => err
       # An exception has been raised. Send to Graylog2!
       send_to_graylog2(err)
 
@@ -34,14 +37,15 @@ class Graylog2Exceptions
 
   def send_to_graylog2 err
     begin
-      gelf = Gelf.new(@hostname, @port)
-      gelf.short_message = err.message
-      gelf.full_message = err.backtrace.join("\n")
-      gelf.level = @level
-      gelf.host = @local_app_name
-      gelf.file = err.backtrace[0].split(":")[0]
-      gelf.line = err.backtrace[0].split(":")[1]
-      gelf.send
+      notifier = GELF::Notifier.new(@args[:hostname], @args[:port])
+      notifier.notify!(
+        :short_message => err.message,
+        :full_message => err.backtrace.join("\n"),
+        :level => @args[:level],
+        :host => @args[:local_app_name],
+        :file => err.backtrace[0].split(":")[0],
+        :line => err.backtrace[0].split(":")[1]
+      )
     rescue => i_err
       puts "Graylog2 Exception logger. Could not send message: " + i_err.message
     end

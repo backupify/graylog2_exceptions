@@ -1,1 +1,5 @@
-See http://www.graylog2.org/ for more information. Use gem as installation source. This is just the development repository.
+Log all the Exceptions of your Rack application to a Graylog2 server.
+
+Installation and configuration instructions in the Wiki.
+
+More information about Graylog2: [[http://www.graylog2.org/]]

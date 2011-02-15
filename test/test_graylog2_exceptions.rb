@@ -14,11 +14,12 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
   end
 
   def test_correct_parameters_when_custom_set
-    c = Graylog2Exceptions.new(nil, {:host => "localhost", :port => 1337, :local_app_name => "yomama", :level => 1})
+    c = Graylog2Exceptions.new(nil, {:host => "localhost", :port => 1337, :max_chunk_size => 'WAN', :local_app_name => "yomama", :level => 1})
     
     assert_equal "yomama", c.args[:local_app_name]
     assert_equal "localhost", c.args[:hostname]
     assert_equal 1337, c.args[:port]
+    assert_equal 'WAN', c.args[:max_chunk_size]
     assert_equal 1, c.args[:level]
   end
   
@@ -28,6 +29,7 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
     assert_equal Socket.gethostname, c.args[:local_app_name]
     assert_equal "localhost", c.args[:hostname]
     assert_equal 12201, c.args[:port]
+    assert_equal 'LAN', c.args[:max_chunk_size]
     assert_equal 3, c.args[:level]
   end
 

@@ -11,6 +11,7 @@ class Graylog2Exceptions
       :port => 12201,
       :local_app_name => Socket::gethostname,
       :facility => 'gelf_exceptions',
+      :max_chunk_size => 'LAN',
       :level => 3
     }
 
@@ -38,7 +39,7 @@ class Graylog2Exceptions
 
   def send_to_graylog2 err
     begin
-      notifier = GELF::Notifier.new(@args[:hostname], @args[:port])
+      notifier = GELF::Notifier.new(@args[:hostname], @args[:port], @args[:max_chunk_size])
       notifier.notify!(
         :short_message => err.message,
         :full_message => err.backtrace.join("\n"),

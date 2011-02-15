@@ -10,6 +10,7 @@ class Graylog2Exceptions
       :hostname => "localhost",
       :port => 12201,
       :local_app_name => Socket::gethostname,
+      :facility => 'gelf_exceptions',
       :level => 3
     }
 
@@ -41,6 +42,7 @@ class Graylog2Exceptions
       notifier.notify!(
         :short_message => err.message,
         :full_message => err.backtrace.join("\n"),
+        :facility => @args[:facility],
         :level => @args[:level],
         :host => @args[:local_app_name],
         :file => err.backtrace[0].split(":")[0],

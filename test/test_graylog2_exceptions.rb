@@ -39,6 +39,7 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
 
     assert json["short_message"].include?('undefined method `klopfer!')
     assert json["full_message"].include?('in `build_exception')
+    assert_equal 'gelf_exceptions', json["facility"]
     assert_equal 4, json["level"]
     assert_equal Socket.gethostname, json["host"]
     assert_equal ex.backtrace[0].split(":")[1], json["line"]
@@ -48,12 +49,13 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
   def test_send_exception_to_graylog2_with_custom_parameters
     ex = build_exception
 
-    c = Graylog2Exceptions.new(nil, {:local_app_name => "machinexx", :level => 4})
+    c = Graylog2Exceptions.new(nil, {:local_app_name => "machinexx", :level => 4, :facility => 'myfacility'})
     sent = Zlib::Inflate.inflate(c.send_to_graylog2(ex).join)
     json = JSON.parse(sent)
 
     assert json["short_message"].include?('undefined method `klopfer!')
     assert json["full_message"].include?('in `build_exception')
+    assert_equal 'myfacility', json["facility"]
     assert_equal 3, json["level"]
     assert_equal "machinexx", json["host"]
     assert_equal ex.backtrace[0].split(":")[1], json["line"]

@@ -27,28 +27,44 @@ class Graylog2Exceptions
   def _call(env)
     begin
       # Call the app we are monitoring
-      @app.call(env)
+      response = @app.call(env)
     rescue => err
       # An exception has been raised. Send to Graylog2!
-      send_to_graylog2(err)
+      send_to_graylog2(err, env)
 
       # Raise the exception again to pass back to app.
       raise
     end
+
+    if env['rack.exception']
+      send_to_graylog2(env['rack.exception'], env)
+    end
+
+    response
   end
 
-  def send_to_graylog2 err
+  def send_to_graylog2(err, env=nil)
     begin
       notifier = GELF::Notifier.new(@args[:hostname], @args[:port], @args[:max_chunk_size])
-      notifier.notify!(
-        :short_message => err.message,
-        :full_message => err.backtrace.join("\n"),
-        :facility => @args[:facility],
-        :level => @args[:level],
-        :host => @args[:local_app_name],
-        :file => err.backtrace[0].split(":")[0],
-        :line => err.backtrace[0].split(":")[1]
-      )
+
+      opts = {
+          :short_message => err.message,
+          :facility => @args[:facility],
+          :level => @args[:level],
+          :host => @args[:local_app_name]
+      }
+
+      if err.backtrace && err.backtrace.size > 0
+        opts = opts.merge ({
+            :full_message => err.backtrace.join("\n"),
+            :file => err.backtrace[0].split(":")[0],
+            :line => err.backtrace[0].split(":")[1],
+        })
+      end
+
+      opts["_environment"] = env if env and env.size > 0
+
+      notifier.notify!(opts)
     rescue => i_err
       puts "Graylog2 Exception logger. Could not send message: " + i_err.message
     end

@@ -64,6 +64,34 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
     assert_equal ex.backtrace[0].split(":")[0], json["file"]
   end
 
+  def test_send_backtraceless_exception_to_graylog2
+    ex = Exception.new("bad")
+    c = Graylog2Exceptions.new(nil, {})
+    sent = Zlib::Inflate.inflate(c.send_to_graylog2(ex).join)
+    json = JSON.parse(sent)
+
+    assert json["short_message"].include?('bad')
+    assert json["full_message"].nil?
+  end
+
+  def test_send_rack_environment_to_graylog2
+    ex = build_exception
+    c = Graylog2Exceptions.new(nil, {})
+
+    sent = Zlib::Inflate.inflate(c.send_to_graylog2(ex).join)
+    json = JSON.parse(sent)
+    assert_nil json["_environment"]
+
+    sent = Zlib::Inflate.inflate(c.send_to_graylog2(ex, {}).join)
+    json = JSON.parse(sent)
+    assert_nil json["_environment"]
+
+    sent = Zlib::Inflate.inflate(c.send_to_graylog2(ex, {"foo" => "bar"}).join)
+    json = JSON.parse(sent)
+    assert_equal({"foo"=>"bar"}, json["_environment"])
+  end
+
+
   def test_invalid_port_detection
     ex = build_exception
 

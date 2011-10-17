@@ -91,6 +91,26 @@ class TestGraylog2Exceptions < Test::Unit::TestCase
     assert_equal({"foo"=>"bar"}, json["_environment"])
   end
 
+  def test_clean_val
+    c = Graylog2Exceptions.new(nil, {})
+    assert_equal "", c.clean_val(nil)
+    assert_equal "foo", c.clean_val("foo")
+    assert_equal ["a", "2"], c.clean_val(["a", 2])
+
+    o = Object.new
+    def o.to_s; "obj"; end
+    assert_equal "obj", c.clean_val(o)
+
+    o = Object.new
+    def o.to_s; raise "bad"; end
+    assert_equal "Bad value: bad", c.clean_val(o)
+  end
+
+  def test_clean_hash
+    c = Graylog2Exceptions.new(nil, {})
+    assert_equal({}, c.clean_val({}))
+    assert_equal({"foo" => "1", "bar" => "2"}, c.clean_val({:foo => 1, "bar" => 2}))
+  end
 
   def test_invalid_port_detection
     ex = build_exception

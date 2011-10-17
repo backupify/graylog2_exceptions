@@ -43,6 +43,33 @@ class Graylog2Exceptions
     response
   end
 
+  def clean_val(v)
+    result = nil
+
+    begin
+      case v
+        when Hash
+          result = clean_hash(v)
+        when Enumerable
+          result = v.collect {|v2| clean_val(v2) }
+        else
+          result = v.to_s
+      end
+    rescue Exception => e
+      result = "Bad value: #{e.message}"
+    end
+
+    return result
+  end
+
+  def clean_hash(h)
+    result = {}
+    h.each do |k, v|
+      result[k.to_s] = clean_val(v)
+    end
+    return result
+  end
+
   def send_to_graylog2(err, env=nil)
     begin
       notifier = GELF::Notifier.new(@args[:hostname], @args[:port], @args[:max_chunk_size])
@@ -62,11 +89,12 @@ class Graylog2Exceptions
         })
       end
 
-      opts["_environment"] = env if env and env.size > 0
+      opts["_environment"] = clean_hash(env) if env and env.size > 0
 
       notifier.notify!(opts)
-    rescue => i_err
+    rescue Exception => i_err
       puts "Graylog2 Exception logger. Could not send message: " + i_err.message
     end
   end
+
 end
